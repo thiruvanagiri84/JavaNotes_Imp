@@ -1,0 +1,64 @@
+How HashMap works in java?
+Online links:
+https://www.youtube.com/watch?v=c3RVW3KGIIE
+https://www.youtube.com/watch?v=zkn0myM0CKI
+
+https://www.geeksforgeeks.org/internal-working-of-hashmap-java/
+https://dzone.com/articles/how-hashmap-works-in-java
+https://stackoverflow.com/questions/10879302/hashmap-implementation-in-java-how-does-the-bucket-index-calculation-work
+https://www.quora.com/How-is-Hashmap-in-Java-implemented-internally-What-are-the-pros-and-cons-to-use-it-What-are-the-complexities-it-provides-for-insert-delete-and-lookup
+Rules of HashMap:
+?	Doesn’t maintain the same order in which they are stored.
+?	Accepts only one NULL as Key
+?	If the 2 keys are same, but has 2 different values, then first value will be replaced with second value. This is because internally, the keys are hashed first and if the hashcode is same, then they fall under same bucket(index), then check for equals() method is made, which returns true if the key is already present there. If true, then the value will be replaced with 2nd one. If false, then new Entry object(node) is created in linked list and 2nd one address will be stored in 1st node NEXT value(1st node points to 2nd node & 2nd node points to 3rd node & so on)
+?	Hashmap maintains array of buckets(or linked list of buckets). Each bucket will have an Index. Initial capacity of array will be 2^4 = 16 and load factor will be 0.75. When no.of elements increase in hashmap and it reaches load factor, the array gets doubled and rehashing takes place.
+?	Each bucket will have linked list of Entry objects(K,V,hash,Next), otherwise called as Nodes.
+?	NULL key will return hashcode of 0, hence will take index of 0 in the array of buckets.
+?	In Java 8, Hashmap starts storing Entry objects in Linked list in each bucket, but after certain threshold, linkedlist is converted to balanced tree. This will improve performance.
+
+
+
+Hashmap.put() operation
+ 
+The put operation performs the following steps : hm.put(“key”,”value”);
+1. calculate hashcode for key
+2. rehash it. lets call the rehashed results as h
+3. calculate bucket index as h & (capacity -1). Here & is bit wise AND
+4. now iterate over that calculated bucket(index) and compare key with all existing keys using equals()
+5. if the key already exists, change the value of that Entry object
+6. else create a new Entry object and add to the head of the linked list
+7. increment mod count (This is done on every add/remove actions on hashmap)
+8. resize if necessary
+ 
+hashmap.get() operation
+ 
+The get operation performs the following steps :
+1. calculate hashcode for key
+2. rehash it. lets call the rehashed results as h
+3. calculate bucket index as h & (capacity -1)
+4. now iterate over that calculated bucket(index) and compare key with all existing keys using equals()
+5. if the key already exists return the corresponding value in the Entry object
+Method to fetch the index of bucket (inside java api)
+static int indexFor(int h, int length) {
+   return h & (length-1);
+}
+
+it's calculating the bucket index.
+The expression h & (length-1) does a bit-wise AND on h (hashcode) using length-1, which is like a bit-mask, to return only the low-order bits of h, thereby making for a super-fast variant of h % length
+
+Why override equals() and hashcode() methods in java?
+Online links:
+https://stackoverflow.com/questions/2265503/why-do-i-need-to-override-the-equals-and-hashcode-methods-in-java
+https://stackoverflow.com/questions/15351261/do-i-need-to-implement-hashcode-and-equals-methods
+https://www.youtube.com/watch?v=IwUwIrz9Ge8
+
+?	Ex: Employee e1 = new(“San”,1000);
+Employee e2 = new(“San”,2000);
+Sysout(e1.equals(e2)) ? returns false, because internal default implementation of equals method in Object class is that it checks for ==, which returns true only when both e1 and e2 point to same memory location, which is not the case.
+In such cases, we need to override equals method in Employee bean.
+If we are NOT dealing with any hashing based collections like “Hashmap, Hashset,Hashtable”, then its fine to just override equals() method alone.
+But if we are dealing with hashing based collections, then we also need to override hashcode() method, because hashcode method returns an Integer value, which will always be unique for different different keys.
+So, if the 2 objects are equal then they should have the same hash as well i.e, equal objects should produce equal hash values.
+
+
+
