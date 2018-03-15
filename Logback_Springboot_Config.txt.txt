@@ -1,0 +1,176 @@
+Springboot - Logback configurations: 
+------------------------------------
+Reference: https://dzone.com/articles/configuring-logback-with-spring-boot
+
+
+-- We need to add our own "logback.xml" file to src/main/resources folder(if not spring boot will use default logback.xml internally). Here, appenders will be added and all other logging configurations.
+-- We can also configure logback using application.properties file. If we use app.properties for mentioning logback config, then spring boot will use default logback.xml internally. If we use both app.prop & logback.xml, then system will consider app.properties only.
+
+## Bare minimum config to start using logback and print log lines on the console:
+
+Add below dependencies to pom.xml (Using Spring-boot-starter-parent v2.0.0 Release)
+
+	<dependency>
+		<groupId>ch.qos.logback</groupId>
+		<artifactId>logback-core</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>ch.qos.logback</groupId>
+		<artifactId>logback-classic</artifactId>
+	</dependency>
+
+Add this in application.properties:
+
+#Bare minimum needed to output logs to console, if there is no seperate logback.xml file -- Begin
+logging.level.root=INFO
+logging.pattern.console=%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger{100}.%M - %msg%n
+#Bare minimum needed to output logs to console -- End
+
+OR 
+
+Add this to logback.xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!--<pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger{36}.%M - %msg%n</pattern>-->
+            <pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} %highlight(%-5level) %logger{100}.%M - %msg%n</pattern>
+        </encoder>
+    </appender>
+    
+	<!-- Root logger -->
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />        
+    </root>
+      
+</configuration>
+
+Add these lines in the java files:
+
+private static final Logger logger = LoggerFactory.getLogger(CuasApiController.class);
+logger.info("Logback log.... orgid: "+orgId+"  email: "+email);
+
+## Adding logs to a FILE
+
+Add another appender to logback.xml(change the LOG_PATH of log file) and refer that appender to Root Logger
+
+	<property name="LOG_PATH" value="C:/Santosh/CPL Project Related/CUASAPI"/>
+	
+	<appender name="SAVE-TO-FILE" class="ch.qos.logback.core.FileAppender">
+	    <file>${LOG_PATH}/samplelog.log</file>
+	    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+	        <Pattern>
+	            %d{dd-MM-yyyy HH:mm:ss.SSS} [%thread] %-5level %logger{100}.%M - %msg%n
+	        </Pattern>
+	    </encoder>
+	</appender>
+	
+	<!-- Root logger -->
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="SAVE-TO-FILE" />
+    </root>
+
+-- Path of logs can also be mentioned in application.properties:
+	
+logging.path=C:/Santosh/CPL Project Related/CUASAPI		
+logging.file=${logging.path}/samplelog.log		
+logging.pattern.file=%d{dd-MM-yyyy HH:mm:ss.SSS} [%thread] %-5level %logger{36}.%M - %msg%n
+	
+## Adding RollingFileAppender 
+
+	<property name="LOG_PATH" value="C:/Santosh/CPL Project Related/CUASAPI"/>
+	
+	<appender name="SAVE-TO-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${LOG_PATH}/samplelog.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<Pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} [%thread] %-5level %logger{36}.%M - %msg%n</Pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>${LOG_PATH}/archived/log_%d{dd-MM-yyyy}.log</fileNamePattern>
+			<maxHistory>10</maxHistory>
+			<totalSizeCap>100MB</totalSizeCap>
+		</rollingPolicy>
+	</appender>
+	
+## Adding custom logger to class level
+
+Add this to logback.xml. additivity should be set to False, otherwise each log will print twice(One for custom logger & Other for root logger).
+
+	<!-- Custom logger: This is specific to only the class CuasApiApplication.java -->
+	<logger name="com.thomsonreuters.cpl.cuasapi.CuasApiApplication" additivity="false" level="DEBUG">
+	    <appender-ref ref="STDOUT" />
+	</logger>
+	
+OR
+
+Add this to application.properties
+
+logging.level.com.thomsonreuters.cpl.cuasapi.CuasApiApplication=debug
+logging.console=debug
+
+##Settings up logback configurations for DEV & PROD seperately:
+
+--A useful feature that Spring Boot provides when using Logback is the ability to separate configuration between environments. So if you wanted to save to file and print to console in your development environment, but only print to file in production
+--We need to add a xml tag - springProfile to logback.xml
+--The first step to get this to work is to rename the logback.xml file to logback-spring.xml, allowing the springProfile tag to be used.
+--In this tag, a name can be provided that can be set via properties, environment variables, or VM options.
+
+-Setting the springProfile tag to DEV or PROD in application.properties
+	spring.profiles.active=dev
+
+-Setting the springProfile tag to DEV or PROD as VM option
+	-Dspring.profiles.active=dev
+
+-logback-spring.xml looks like this if we were to use springProfile tag:
+
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    
+	<!-- config for STDOUT and SAVE-TO-FILE -->
+	
+    <springProfile name="dev">
+        <root level="info">
+            <appender-ref ref="STDOUT" />
+            <appender-ref ref="SAVE-TO-FILE" />
+        </root>
+        <logger name="com.lankydan.service.MyServiceImpl" additivity="false" level="debug">
+            <appender-ref ref="STDOUT" />
+            <appender-ref ref="SAVE-TO-FILE" />
+        </logger>
+    </springProfile>
+	
+    <springProfile name="prod">
+        <root level="info">
+            <appender-ref ref="SAVE-TO-FILE" />
+        </root>
+        <logger name="com.lankydan.service.MyServiceImpl" additivity="false" level="error">
+            <appender-ref ref="SAVE-TO-FILE" />
+        </logger>
+    </springProfile>
+	
+</configuration>
+
+-A similar configuration can also be provided via application.properties. Follow the naming convention of application-{environment}.properties where {environment} is replaced with the environment name. Like below:
+application-dev.properties 
+application-prod.properties
+
+Ex: application-dev.properties
+
+logging.level.root=info		
+logging.level.com.lankydan.service=debug		
+logging.path=logs		
+logging.file=${logging.path}/log.log		
+logging.pattern.file=%d{dd-MM-yyyy HH:mm:ss.SSS} [%thread] %-5level %logger{36}.%M - %msg%n		
+logging.pattern.console=%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger.%M - %msg%n
+
+Ex: application-prod.properties
+
+logging.level.root=info		
+logging.level.com.lankydan.service=error		
+logging.path=logs		
+logging.file=${logging.path}/log.log		
+logging.pattern.file=%d{dd-MM-yyyy HH:mm:ss.SSS} [%thread] %-5level %logger{36}.%M - %msg%n		
+logging.pattern.console=
