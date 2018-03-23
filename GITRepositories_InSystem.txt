@@ -1,6 +1,20 @@
+github credentials: San email id/ONE
+
 C:\Santosh\JAVA\Practice\cuas-api
+	git@github.com:thiruvanagiri84/my-cuas-api.git
 
 C:\Santosh\JAVA\Practice\cuasapi_standalonetest
+	git@github.com:thiruvanagiri84/my-cuas-api-standalone-test.git
 
 C:\Santosh\JAVA\JavaNotes_San_Imp
+	git@github.com:thiruvanagiri84/JavaNotes_Imp.git
+
+C:\Santosh\JAVA\Practice\JQueryPractice
+	git@github.com:thiruvanagiri84/JQueryLearning.git
+
+C:\Santosh\JAVA\Practice\BootStrapPractice
+	git@github.com:thiruvanagiri84/BootStrapLearning.git
+
+Angular2Learning C:\Santosh\JAVA\Practice\cpl-bento
+	git@github.com:thiruvanagiri84/Angular2withRESTmyCuasApi.git
 
