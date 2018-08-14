@@ -1,0 +1,50 @@
+Push code to GITHUB
+-------------------
+
+1. Open github url --> https://github.com/
+2. Create a profile
+3. Create a public repository with optional README.md file
+4. Copy the SSH url(by clicking on Clone or Download green button), ex: git@github.com:thiruvanagiri84/testrepo.git
+5. Go to Profile Settings(Top right side corner) 
+6. Click on SSH and GPG Keys
+7. Click Generate Key
+8. Open Git Bash
+9. Type in:  ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+	replace with the email id used for creating Github profile
+10. It will ask for the path to store the rsa public key --> Press ENTER if you dont want to change the shown path
+11. Again press ENTER twice if asked for paraphrase OR enter some paraphrase
+12. Now the SSH key gets generated under C:/Users/Username/.ssh folder. Copy the SSH key from id_rsa.pub file
+13. Paste this SSH key in the SSH and GPG keys page --> Click add (These keys might expire frequently, so keep adding by following this procedure)
+14. Go to Git bash
+15. Go to the folder you want to push to Github (Ex: C:\Users\THIRUVANAGIRI\Downloads\GitTest
+													 Change it like this 
+													 /C/Users/THIRUVANAGIRI/Downloads/GitTest)
+16. Type: git init 
+17. Type: git remote add origin git@github.com:thiruvanagiri84/testrepo.git
+	Replace with whatever repo you are using (and this should be SSH url, if you have created SSH key)
+18. Type: git remote -v
+	This will verify 
+
+Git bash commands to push:
+19. git status  --> this will display changes
+20. git add . --> this will add all those changes for staging
+21. git commit -m "commit message"
+22. git push origin master --> master is the branch name
+
+Git GUI commands of above 4 steps:
+19. Type: git gui
+	This will open GUI window where we can see all the files of the folder which we are currently in
+20. Select the file from left side bar and Select Commit from drop down and Click Stage to Commit
+21. That file will come to bottom left bar and you can write some commit comments and then click Commit.
+22. Here if Identity error comes then,
+	Type these 2 commands in Git bash
+	git config --global user.email "santosh.thiruvanagiri@gmail.com"
+	git config --global user.name "thiruvanagiri84" (thiruvanagiri84 is my username in github)
+23. Then Click Push --> If everything is fine, then green Success message will be shown.
+24. There might be error while pushing, if the repo already has a new checkin done by someone. Then go to Git bash and Type: git pull (getting latest version)
+
+
+25. git clone git@git.sami.int.thomsonreuters.com:tr/LearnliveAutomation.git
+	This will clone the existing git project(copy the git project url from GIT repository).
+26. git stash --> To shuffle between branch while storing the changes done, temporiryly. OR during same file changes conflicts.
+27. git stash apply --> this will apply the changes to the branch(from temporory storage done above)

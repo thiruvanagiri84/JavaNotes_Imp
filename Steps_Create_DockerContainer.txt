@@ -1,0 +1,199 @@
+Steps to create Docker container on Linux:
+
+Before these steps: Copy the cuasapi.jar into ./docker/mgmt
+This jar file will be picked up and copied into /opt directory in step 2.
+
+1. Run the below Dockerfile to create a Docker image which has Java
+	filename: Dockerfile-java
+2. Creating Dockerfile to create a Docker image for CUAS API
+	filename: Dockerfile-mgmt
+	
+	This has following commands:
+	
+	FROM alpine-java:8u161   				  //Use existing Java docker image
+
+	LABEL maintainer="kirk.husby@gmail.com"   //Optional - who is the creater of this image
+	
+	RUN apk add --update curl &&\			  //This is for creating a directory inside the existing image
+	mkdir -p /opt					
+	
+	COPY /mgmt/cuasapi.jar /opt/cuasapi.jar   //Copying the cuasapi.jar to the directory inside the existing image(apline-java)
+	
+	# Launch Tomcat on startup		
+	CMD java -jar /opt/cuasapi.jar			  //Running the application using embedded Tomcat server
+
+3. Run the below .sh file to build the Docker image
+	filename: build-mgmt.sh
+	
+	This has following commands: (there r few more commands in the above .sh file - see them)
+	
+	sudo docker build -f Dockerfile-mgmt --rm=true \
+       -t mgmt-service .						// Building the docker image with name: mgmt-service
+	   
+4. Command to view the created Docker images 
+	docker images
+
+5. Command to remove the CUAS API container service from and shut it down forcefully
+	docker rm mgmt-service -f
+
+6. execute this to start up a new container running the new image.   
+	docker run -p 8040:8040 -d --name mgmt-service mgmt-service   //Last but one name is the Docker container name, and last arg is the Docker image name. 1st port num is of the machine port and 2nd is the application tomcat port
+	
+	-- We can specify environment variables while creating docker container as shown below
+	For QA: docker run -p 8040:8040 -e "SPRING_PROFILES_ACTIVE=qa" -d --name mgmt-service-qa mgmt-service
+	For Production: docker run -p 8041:8040 -e "SPRING_PROFILES_ACTIVE=prod" -d --name mgmt-service-prod mgmt-service
+
+	-- Here, we have used Spring profiles concept where we created 2 diff properties files based on environments:
+		application-qa.properties
+		application-prod.properties
+
+7. Command to view the running Docker containers:
+	docker ps -a
+	
+Extra:
+
+docker info    			//info about running docker service on the machine
+https://docs.docker.com/engine/reference/commandline/docker/#child-commands
+
+8. Docker compose - Used to create containers from docker-compose.yml file. Instead of writing docker Run commands each time, use docker compose. https://docs.docker.com/compose/install/#install-compose (Docker installation 3 steps)
+
+	version: '3'
+	services:
+	  mgmt-service-qa:						//Container name
+		image: mgmt-service
+		ports:
+		 - "8040:8040"
+		environment:
+		 - SPRING_PROFILES_ACTIVE=qa
+	  mgmt-service-prod:
+		image: mgmt-service
+		ports:
+		 - "8041:8040"
+		environment:
+		 - SPRING_PROFILES_ACTIVE=prod
+
+9. Docker-compose up -d   		// This will spin up the containers mentioned in the above yml file
+
+10. Stopping & Removing Containers via command "docker-compose down"
+	
+	You can stop your containers using the stop or down command, but the down command does more than stopping your containers.
+The docker-compose stop command will stop your containers, but it won’t remove them.
+
+The docker-compose down command will stop your containers, but it also removes the stopped containers as well as any networks that were created.
+
+You can take down 1 step further and add the -v flag to remove all volumes too. This is great for doing a full blown reset on your environment by running docker-compose down -v.
+
+There’s other neat things you could with the down command. Run the docker-compose down --help command to learn more about them.
+
+11. docker login 
+This command is Used to push and pull from docker hub.
+
+Docker hub credentials:
+thiruvanagiri84
+$ONE
+
+AWS credentials:
+san gmail
+$ONE
+
+12. Steps to push docker image to docker hub
+	a. Create a repository with the same image name which you want to push to docker hub
+	b. 	docker tag mgmt-service-aug thiruvanagiri84/mgmt-service-aug:firsttry
+			docker tag <image name Or image ID> <dockerhubusername/image name>:<tagname>
+			docker images
+			newly created docker tag will be shown under repository
+			docker push thiruvanagiri84/mgmt-service-aug:firsttry
+			docker push <earlier created docker tag name>:<tagname>
+	OR
+	
+	a. spin a docker container from the docker image.
+	b. docker ps -a  ---- this will list all the running containers
+	c. docker commit <containerID> <dockerhubusername/anyname>:<tagname>
+	d. docker images
+	e. docker push <dockerhubusername/anyname>:<tagname>
+
+13. Docker Installation on AWS:
+https://docs.aws.amazon.com/AmazonECS/latest/developerguide/docker-basics.html#install_docker
+
+1.	sudo yum update -y  Update the installed packages and package cache on your instance.
+2.	sudo yum install -y docker
+3.	sudo service docker start
+4.	sudo usermod -a -G docker ec2-user  Add the ec2-user to the docker group so you can execute Docker commands without using sudo.
+5.	Logout and login your SSH terminal to pick up the new docker group permissions.
+6.	docker info  Verify that the ec2-user can run Docker commands without sudo.
+
+Once docker is installed we can pull the existing images from docker hub as described below:
+Docker push: Used to push docker image to docker hub
+Cmd: docker login
+It will ask for docker hub login credentials:
+thiruvanagiri84
+$ONE
+After login, enter following commands to first tag your image and then push it to your docker hub repository.
+	docker images
+	docker tag mgmt-service-aug thiruvanagiri84/mgmt-service-aug:firsttry
+docker tag <image name OR imageID> <dockerhubusername/image name>:<tagname>
+	docker images
+newly created docker tag will be shown under repository with our created tagname(firsttry)
+	docker push thiruvanagiri84/mgmt-service-aug:firsttry
+docker push <earlier created docker tag name>:<tagname>
+Assumption: Sign in to docker hub and create a repository.
+OR we can create docker image from a running docker container and then push that image to docker hub.
+	a. spin a docker container from the docker image.
+	b. docker ps -a  ---- this will list all the running containers
+	c. docker commit <containerID> <dockerhubusername/anyname>:<tagname>
+	d. docker images
+	e. docker push <dockerhubusername/anyname>:<tagname>
+
+Docker Pull from docker HUB:
+1.	docker pull thiruvanagiri84/mgmt-service-aug:firsttry
+docker pull <dockerhub username/imagename>:<tagname>
+2.	docker images
+3.	our pulled docker image will be shown 
+4.	Run the docker image
+docker run -p 8040:8040 -e "SPRING_PROFILES_ACTIVE=qa" -d --name cuasapi-qa thiruvanagiri84/ mgmt-service-aug:firsttry
+5.	docker ps -a  this will show list of running containers. Our container will be up after the above command.
+
+Now try to access via postman: http://18.222.45.4:8040/internal/V1/anonymouslogin (will not connect)
+Here is the problem:
+	We have exposed 8040 port of our EC2 instance machine and mapped the requests coming to port 8040 to 8040 mentioned in the application. (8040:8040). 
+	But we haven’t mapped our EC2 running port 80(created during security group stage while Launching EC2 instance) to 8040. This will be done by “nginx” load balancer. We need to modify nginx.conf script for mapping EC2 default port 80(which we exposed to outer world) to 8040.
+
+ Installing NGINX on AWS:
+
+https://aws.amazon.com/amazon-linux-2/faqs/#Amazon_Linux_Extras
+https://github.com/carlosCharz/installtomcataws
+
+1.	sudo amazon-linux-extras install nginx1.12
+2.	After installing nginx load balancer, add configuration changes in etc/nginx/nginx.conf and add below line in that file.
+
+To open the file for editing,
+a.	Go to the directory, cd /etc/nginx
+b.	use cmd  sudo nano etc/nginx/nginx.conf  (to remove sudo, type cmd “sudo su” <Enter>, this will give root access)
+c.	Search for server {
+        listen       80 default_server;
+
+below you will find location/{
+}
+
+d.	Paste below code at this location.
+e.	Save the fix by Ctrl+x and then y then <Enter>
+
+location / {
+
+         proxy_connect_timeout 300;
+
+         proxy_send_timeout 300;
+
+         proxy_read_timeout 300;
+
+         proxy_pass http://localhost:8040;
+
+        }
+
+Tip: vi etc/nginx/nginx.conf
+Save file after writing  ESC then :wq
+Come  out of file without savings  ESC then :q!
+
+Likewise, we can create many ports while creating EC2 instance and each port should be happing a mapping to our own ports inside EC2 machine. We need to search for Server{ in the nginx.conf script and modify accordingly. Ex below:
+https://github.com/carlosCharz/installtomcataws
+Search for : Add Nginx Domain Binding
