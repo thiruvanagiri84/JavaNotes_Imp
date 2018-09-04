@@ -1,0 +1,31 @@
+CREATE OR REPLACE
+PROCEDURE SP_UPDATE_ROLE_STATUS
+( SID1 IN VARCHAR2
+, ROLEID1 IN VARCHAR2 DEFAULT NULL
+, ROLEID2 IN VARCHAR2 DEFAULT NULL
+, STATUSID1 IN VARCHAR2 DEFAULT NULL
+, STATUSID2 IN VARCHAR2 DEFAULT NULL
+) AS
+BEGIN
+
+  IF ROLEID1 = 'ONE'
+    THEN
+      BEGIN
+         UPDATE user_role_info set isactive=statusid1 WHERE sid= sid1
+              AND role_id= roleid1;
+        COMMIT;
+      END;
+ 
+ END IF;
+ 
+ IF ROLEID2 = 'TWO'
+    THEN
+      BEGIN
+         UPDATE user_role_info set isactive= statusid2 WHERE sid= sid1
+              AND role_id= roleid2;
+        COMMIT;
+      END;
+ 
+ END IF;
+   
+END SP_UPDATE_ROLE_STATUS;
